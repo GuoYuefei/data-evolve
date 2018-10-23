@@ -30,7 +30,7 @@ type SystemClock struct {
 //now从零计时
 //Relative默认是R125
 func NewSystemClock() *SystemClock {
-	return &SystemClock{*dataTime.NewTime(0),R250}
+	return &SystemClock{*dataTime.NewTime(0),R50}
 }
 
 //私有变量now的访问器
@@ -41,31 +41,29 @@ func (SC SystemClock)Now() *dataTime.Time {
 //给Relative赋值的常量选择
 const (
 	UNIT time.Duration = 1
-	R1000 = UNIT << iota
-	R500
-	R250
-	R125
-	R63
-	R31
-	R17
-	R8
-	R4
-	R2
-	R1									//其实这个值是1024近似1000
-	R0_5
-	R0_25
-	R0_125
+	R50 = UNIT << iota					//这里的iota=1
+	R25
+	R12
+	R6
+	R3
+	R1 						//其实这个值是512近似500
+	R0_8
+	R0_4
+	R0_2
+	R0_1
 )
 
 //使用goroutine，需要开启一个计时系统
 //当然最后这个函数可以控制虚拟时间行走的快慢
 //快慢控制取决于结构体中Relative的值
+//快慢的控制是不精确的，因为这需要考虑到系统调度问题
+//虽然精度不高但是不同的参数也是有区别的 这里的时间流速参数相当于只是一个挡位而已
 func (SC *SystemClock)Walk() {
 	go func() {
 		for {
 
-			time.Sleep(SC.Relative * time.Microsecond)				//现实N微秒时间
-			SC.now.Millisecond++						//虚拟时间加1毫秒
+			time.Sleep(SC.Relative * time.Millisecond) //现实N毫秒时间
+			SC.now.TenSec++                            //虚拟时间加0.1秒
 		}
 	}()
 }
